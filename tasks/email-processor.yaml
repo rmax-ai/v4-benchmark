@@ -1,0 +1,28 @@
+name: email-processor
+description: "Process pending emails from inbox using himalaya CLI"
+skills:
+  - himalaya
+prompt: |
+  Process pending emails from me@rmax.io in the email queue.
+
+  Steps:
+  1. Check the email queue for pending messages
+  2. For each pending email:
+     a. Read the full content
+     b. Categorize: action required, FYI, newsletter, spam
+     c. For action-required: draft a response or note what action is needed
+     d. For newsletters: extract key highlights
+  3. Produce a summary report:
+     - Total emails processed
+     - Action items identified
+     - Key highlights from newsletters
+     - Anything urgent that needs immediate attention
+
+  Work autonomously. Process all pending emails.
+toolsets:
+  - terminal
+  - web
+evaluation_focus:
+  - correctness
+  - actionability
+  - structure

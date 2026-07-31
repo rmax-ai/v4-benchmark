@@ -1,0 +1,32 @@
+name: gh-trending
+description: "Weekly GitHub trending repositories analysis and insights"
+skills: []
+prompt: |
+  You are producing the weekly GitHub Trending Consolidated Insights report.
+
+  Analyze this week's trending repositories on GitHub. Focus on:
+  - AI/ML tools and frameworks
+  - Developer tools and infrastructure
+  - New programming languages or paradigms
+  - Notable open source projects
+
+  For each significant repository:
+  - Name, description, language, stars gained this week
+  - What problem it solves and who it's for
+  - Technical assessment: architecture quality, code health signals
+  - Relevance to Max's work (agent infrastructure, MCP, governed AI)
+
+  Produce a consolidated insights report with:
+  1. Top 10 trending repos with analysis
+  2. Emerging trends and patterns across repos
+  3. Recommendations: which repos are worth deeper investigation
+
+  Format as a structured markdown report.
+toolsets:
+  - web
+  - terminal
+  - file
+evaluation_focus:
+  - correctness
+  - depth
+  - actionability

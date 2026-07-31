@@ -1,0 +1,29 @@
+name: ai-paper-digest
+description: "Daily AI paper digest from arXiv using arxiv skill"
+skills:
+  - arxiv
+prompt: |
+  You are running a daily AI paper digest for Max. It's morning in Amsterdam (CEST, UTC+2).
+
+  Search arXiv for the most important AI/ML papers from the last 24 hours across:
+  - Large language models and transformers
+  - AI agents and agentic systems
+  - Reinforcement learning and alignment
+  - Computer vision and multimodal models
+  - AI infrastructure and systems
+
+  For each paper found:
+  - Provide title, authors, and a 2-3 sentence summary of the key contribution
+  - Note if it's particularly relevant to Max's work (agent infrastructure, MCP, governed AI workflows)
+
+  Produce a ranked digest of the top 5-8 papers. Sort by relevance and potential impact.
+  Format as a clear, scannable digest with paper titles as headings.
+toolsets:
+  - web
+  - file
+  - terminal
+workdir: /home/rmax-10/src/rmax-ai/knowledge-graph
+evaluation_focus:
+  - correctness
+  - depth
+  - actionability

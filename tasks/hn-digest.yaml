@@ -1,0 +1,28 @@
+name: hn-digest
+description: "Hacker News AI-focused story digest"
+skills: []
+prompt: |
+  You are running an AI-focused Hacker News digest for Max.
+
+  Fetch the top 30 stories from Hacker News (use the HN API or web extraction).
+  Filter for stories related to:
+  - AI, machine learning, LLMs
+  - Software engineering and developer tools
+  - Startups and technology business
+  - Open source projects
+  - Infrastructure and DevOps
+
+  For each relevant story:
+  - Provide the title and a 1-2 sentence summary
+  - Include the HN points and comment count
+  - Note why it matters
+
+  Produce a ranked digest of the top 5-8 most interesting stories.
+  Format as a clear digest with story titles as headings.
+toolsets:
+  - web
+  - file
+evaluation_focus:
+  - correctness
+  - depth
+  - actionability
