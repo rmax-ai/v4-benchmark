@@ -7,7 +7,6 @@ import os
 import re
 import subprocess
 import sys
-import tempfile
 import time
 from datetime import datetime, timezone
 
@@ -90,22 +89,6 @@ def parse_token_usage(output: str) -> dict:
     return usage
 
 
-def build_hermes_cmd(
-    model: str,
-    skills: list[str],
-    prompt: str,
-    prompt_file: str,
-    workdir: str | None = None,
-) -> list[str]:
-    """Build the hermes chat command."""
-    cmd = ["hermes", "chat", "-q", "-m", model]
-    if skills:
-        cmd.extend(["-s", ",".join(skills)])
-    # Use prompt file to handle special characters safely
-    cmd.append(f"$(cat {prompt_file})")
-    return cmd
-
-
 def run_single(
     task_def: dict,
     model: str,
@@ -126,28 +109,15 @@ def run_single(
 
     timestamp = datetime.now(timezone.utc).isoformat()
 
-    # Write prompt to a temp file to handle special characters safely
-    with tempfile.NamedTemporaryFile(
-        mode="w",
-        suffix=".txt",
-        prefix="bench_prompt_",
-        delete=False,
-    ) as tf:
-        tf.write(prompt)
-        prompt_file = tf.name
-
     try:
-        # Build shell command using the prompt file
-        skills_arg = f"-s {','.join(skills)}" if skills else ""
-        shell_cmd = (
-            f"hermes chat -q -m {model} {skills_arg} "
-            f'"$(cat {prompt_file})"'
-        )
+        # Build command as list — no shell=True, no quoting issues
+        cmd = ["hermes", "chat", "-q", prompt, "-m", model]
+        if skills:
+            cmd.extend(["-s", ",".join(skills)])
 
         start = time.perf_counter()
         result = subprocess.run(
-            shell_cmd,
-            shell=True,
+            cmd,
             capture_output=True,
             text=True,
             timeout=timeout,
@@ -179,13 +149,6 @@ def run_single(
         exit_code = -1
         errors.append(f"Unexpected error: {e}")
         stderr = str(e)
-
-    finally:
-        # Clean up temp file
-        try:
-            os.unlink(prompt_file)
-        except OSError:
-            pass
 
     # Parse token usage from stdout
     token_usage = parse_token_usage(stdout) if stdout else {

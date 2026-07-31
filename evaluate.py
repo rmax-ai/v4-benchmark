@@ -8,7 +8,6 @@ import random
 import re
 import subprocess
 import sys
-import tempfile
 import time
 from datetime import datetime, timezone
 
@@ -59,7 +58,7 @@ def load_run_results(run_dir: str) -> dict[str, list[dict]]:
         sys.exit(1)
 
     for fname in sorted(os.listdir(run_dir)):
-        if not fname.endswith(".json") or fname == "summary.json":
+        if not fname.endswith(".json") or fname in ("summary.json", "evaluation.json"):
             continue
         fpath = os.path.join(run_dir, fname)
         try:
@@ -101,23 +100,11 @@ def truncate_output(text: str, max_chars: int = 8000) -> str:
 
 def call_judge(prompt: str, timeout: int = 300) -> dict | None:
     """Call the LLM judge via hermes chat and parse the JSON response."""
-    with tempfile.NamedTemporaryFile(
-        mode="w",
-        suffix=".txt",
-        prefix="judge_prompt_",
-        delete=False,
-    ) as tf:
-        tf.write(prompt)
-        prompt_file = tf.name
-
     try:
-        shell_cmd = (
-            f'hermes chat -q -m deepseek-v4-pro "$(cat {prompt_file})"'
-        )
+        cmd = ["hermes", "chat", "-q", prompt, "-m", "deepseek-v4-pro"]
 
         result = subprocess.run(
-            shell_cmd,
-            shell=True,
+            cmd,
             capture_output=True,
             text=True,
             timeout=timeout,
@@ -144,24 +131,51 @@ def call_judge(prompt: str, timeout: int = 300) -> dict | None:
     except Exception as e:
         print(f"Warning: judge error: {e}", file=sys.stderr)
         return None
-    finally:
-        try:
-            os.unlink(prompt_file)
-        except OSError:
-            pass
 
 
 def extract_json(text: str) -> dict | None:
-    """Extract a JSON object from text that may contain surrounding content."""
-    # First try to find a JSON block
-    json_match = re.search(r'\{[^{}]*"scores_a"[^{}]*\}', text, re.DOTALL)
-    if json_match:
-        try:
-            return json.loads(json_match.group(0))
-        except json.JSONDecodeError:
-            pass
+    """Extract a JSON object from text that may contain surrounding content.
 
-    # Try to find any JSON object
+    Uses brace-balancing to find all possible JSON objects, then returns the
+    first one that contains the expected 'scores_a' key.
+    """
+    candidates = []
+
+    # Find all brace-balanced candidates
+    depth = 0
+    start = -1
+    for i, ch in enumerate(text):
+        if ch == "{":
+            if depth == 0:
+                start = i
+            depth += 1
+        elif ch == "}":
+            depth -= 1
+            if depth == 0 and start >= 0:
+                candidates.append(text[start : i + 1])
+                start = -1
+            elif depth < 0:
+                depth = 0  # Malformed — reset
+
+    # Try to parse candidates, prefer ones with 'scores_a'
+    for candidate in candidates:
+        try:
+            parsed = json.loads(candidate)
+            if isinstance(parsed, dict) and "scores_a" in parsed:
+                return parsed
+        except (json.JSONDecodeError, ValueError):
+            continue
+
+    # Fallback: return the first valid JSON dict
+    for candidate in candidates:
+        try:
+            parsed = json.loads(candidate)
+            if isinstance(parsed, dict):
+                return parsed
+        except (json.JSONDecodeError, ValueError):
+            continue
+
+    # Last resort: try regex for simple JSON
     json_match = re.search(r"\{.*\}", text, re.DOTALL)
     if json_match:
         try:
