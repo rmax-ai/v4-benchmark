@@ -2,3 +2,24 @@ results/
 __pycache__/
 .venv/
 *.pyc
+
+# gitignore-hygiene additions (2026-10-03)
+.env
+.env.*
+!.env.example
+!.env.sample
+!.env.template
+*.log
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+.coverage
+htmlcov/
+coverage/
+build/
+dist/
